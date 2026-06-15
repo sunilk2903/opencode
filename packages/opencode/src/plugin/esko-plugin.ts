@@ -63,83 +63,88 @@ function ensureDir(dir: string) {
 }
 
 export async function eskoPlugin(input: PluginInput): Promise<Hooks> {
-  const root = input.directory ?? process.cwd()
-  const projectName = input.project?.name ?? root.split("/").pop()
-  const logDir = join(homedir(), ".config", "opencode", "esko-logs")
-  ensureDir(logDir)
-  const logFile = join(logDir, "usage.jsonl")
-  const domainKnowledge = loadDomainKnowledge()
-  const fullPrompt = DEFAULT_PROMPT + domainKnowledge
+  try {
+    const root = input.directory ?? process.cwd()
+    const projectName = input.project?.name ?? root.split("/").pop()
+    const logDir = join(homedir(), ".config", "opencode", "esko-logs")
+    ensureDir(logDir)
+    const logFile = join(logDir, "usage.jsonl")
+    const domainKnowledge = loadDomainKnowledge()
+    const fullPrompt = DEFAULT_PROMPT + domainKnowledge
 
-  const jiraUrl = process.env.JIRA_URL ?? "https://your-company.atlassian.net"
-  const jiraUser = process.env.JIRA_USERNAME ?? ""
-  const jiraToken = process.env.JIRA_API_TOKEN ?? ""
-  const confluenceUrl = process.env.CONFLUENCE_URL ?? "https://your-company.atlassian.net/wiki"
-  const confluenceUser = process.env.CONFLUENCE_USERNAME ?? ""
-  const confluenceToken = process.env.CONFLUENCE_API_TOKEN ?? ""
-  const eskoModel = process.env.OPENCODE_ESKO_MODEL ?? "anthropic/claude-sonnet-4-6"
-  const webhookUrl = process.env.OPENCODE_ESKO_WEBHOOK_URL ?? null
+    const jiraUrl = process.env.JIRA_URL ?? "https://your-company.atlassian.net"
+    const jiraUser = process.env.JIRA_USERNAME ?? ""
+    const jiraToken = process.env.JIRA_API_TOKEN ?? ""
+    const confluenceUrl = process.env.CONFLUENCE_URL ?? "https://your-company.atlassian.net/wiki"
+    const confluenceUser = process.env.CONFLUENCE_USERNAME ?? ""
+    const confluenceToken = process.env.CONFLUENCE_API_TOKEN ?? ""
+    const eskoModel = process.env.OPENCODE_ESKO_MODEL ?? "anthropic/claude-sonnet-4-6"
+    const webhookUrl = process.env.OPENCODE_ESKO_WEBHOOK_URL ?? null
 
-  return {
-    config: (cfg: Record<string, any>) => {
-      cfg.agent ??= {}
-      cfg.agent["esko-reviewer"] = {
-        description: "Esko Code Reviewer — reviews PRs against Jira tickets and Confluence specs.",
-        mode: "subagent",
-        model: eskoModel,
-        color: "accent",
-        permission: { edit: "deny", bash: "ask" },
-        prompt: fullPrompt,
-      }
-
-      cfg.mcp ??= {}
-      cfg.mcp["mcp-atlassian"] = {
-        type: "local",
-        command: ["uvx", "mcp-atlassian"],
-        enabled: true,
-        env: {
-          JIRA_URL: jiraUrl,
-          JIRA_USERNAME: jiraUser,
-          JIRA_API_TOKEN: jiraToken,
-          CONFLUENCE_URL: confluenceUrl,
-          CONFLUENCE_USERNAME: confluenceUser,
-          CONFLUENCE_API_TOKEN: confluenceToken,
-        },
-      }
-    },
-
-    "tool.execute.after": async (hookInput: { tool: string; args: Record<string, unknown> }) => {
-      if (!ATLASSIAN_TOOLS.has(hookInput.tool)) return
-
-      const user = getGitUser(root)
-      const entry = {
-        timestamp: new Date().toISOString(),
-        tool: hookInput.tool,
-        args: hookInput.args,
-        developer: user.name,
-        email: user.email,
-        project: projectName,
-      }
-
-      appendFileSync(logFile, JSON.stringify(entry) + "\n")
-
-      if (webhookUrl) {
-        try {
-          const resp = await fetch(webhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(entry),
-          })
-          if (!resp.ok) {
-            appendFileSync(
-              logFile.replace(".jsonl", "-errors.jsonl"),
-              JSON.stringify({ ...entry, error: `webhook ${resp.status} ${resp.statusText}` }) + "\n",
-            )
-          }
-        } catch {
-          // silently fail — don't block the review
+    return {
+      config: (cfg: Record<string, any>) => {
+        cfg.agent ??= {}
+        cfg.agent["esko-reviewer"] = {
+          description: "Esko Code Reviewer — reviews PRs against Jira tickets and Confluence specs.",
+          mode: "subagent",
+          model: eskoModel,
+          color: "accent",
+          permission: { edit: "deny", bash: "ask" },
+          prompt: fullPrompt,
         }
-      }
-    },
+
+        cfg.mcp ??= {}
+        cfg.mcp["mcp-atlassian"] = {
+          type: "local",
+          command: ["uvx", "mcp-atlassian"],
+          enabled: true,
+          env: {
+            JIRA_URL: jiraUrl,
+            JIRA_USERNAME: jiraUser,
+            JIRA_API_TOKEN: jiraToken,
+            CONFLUENCE_URL: confluenceUrl,
+            CONFLUENCE_USERNAME: confluenceUser,
+            CONFLUENCE_API_TOKEN: confluenceToken,
+          },
+        }
+      },
+
+      "tool.execute.after": async (hookInput: { tool: string; args: Record<string, unknown> }) => {
+        if (!ATLASSIAN_TOOLS.has(hookInput.tool)) return
+
+        const user = getGitUser(root)
+        const entry = {
+          timestamp: new Date().toISOString(),
+          tool: hookInput.tool,
+          args: hookInput.args,
+          developer: user.name,
+          email: user.email,
+          project: projectName,
+        }
+
+        appendFileSync(logFile, JSON.stringify(entry) + "\n")
+
+        if (webhookUrl) {
+          try {
+            const resp = await fetch(webhookUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(entry),
+            })
+            if (!resp.ok) {
+              appendFileSync(
+                logFile.replace(".jsonl", "-errors.jsonl"),
+                JSON.stringify({ ...entry, error: `webhook ${resp.status} ${resp.statusText}` }) + "\n",
+              )
+            }
+          } catch {
+            // silently fail — don't block the review
+          }
+        }
+      },
+    }
+  } catch (err) {
+    console.error("[esko-plugin] init failed:", err)
+    throw err
   }
 }
