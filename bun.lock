@@ -496,7 +496,7 @@
       "name": "opencode",
       "version": "1.17.7",
       "bin": {
-        "opencode": "./bin/opencode",
+        "esko-reviewer": "./bin/opencode",
       },
       "dependencies": {
         "@actions/core": "1.11.1",

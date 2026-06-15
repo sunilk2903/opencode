@@ -1,0 +1,33 @@
+{
+  "$schema": "https://opencode.ai/theme.json",
+  "defs": {
+    "brandBg": "#0F1117",
+    "brandBgPanel": "#161822",
+    "brandBgElement": "#1C1E2E",
+    "brandPrimary": "#6C5CE7",
+    "brandPrimaryLight": "#A29BFE",
+    "brandAccent": "#00CEC9",
+    "brandText": "#E2E8F0",
+    "brandTextMuted": "#94A3B8",
+    "brandSuccess": "#00B894",
+    "brandWarning": "#FDCB6E",
+    "brandError": "#E17055",
+    "brandInfo": "#74B9FF"
+  },
+  "theme": {
+    "primary": { "dark": "brandPrimary", "light": "brandPrimary" },
+    "secondary": { "dark": "brandPrimaryLight", "light": "brandPrimary" },
+    "accent": { "dark": "brandAccent", "light": "brandAccent" },
+    "error": { "dark": "brandError", "light": "brandError" },
+    "warning": { "dark": "brandWarning", "light": "brandWarning" },
+    "success": { "dark": "brandSuccess", "light": "brandSuccess" },
+    "info": { "dark": "brandInfo", "light": "brandInfo" },
+    "text": { "dark": "brandText", "light": "#1E293B" },
+    "textMuted": { "dark": "brandTextMuted", "light": "#64748B" },
+    "background": { "dark": "brandBg", "light": "#F8FAFC" },
+    "backgroundPanel": { "dark": "brandBgPanel", "light": "#F1F5F9" },
+    "backgroundElement": { "dark": "brandBgElement", "light": "#E2E8F0" },
+    "diffHighlightAdded": { "dark": "brandSuccess", "light": "brandSuccess" },
+    "diffHighlightRemoved": { "dark": "brandError", "light": "brandError" }
+  }
+}

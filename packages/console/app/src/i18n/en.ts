@@ -13,7 +13,7 @@ export const dict = {
   "nav.home": "Home",
   "nav.openMenu": "Open menu",
   "nav.getStartedFree": "Get started for free",
-  "nav.logoAlt": "OpenCode",
+  "nav.logoAlt": "Esko Code Reviewer",
 
   "nav.context.copyLogo": "Copy logo as SVG",
   "nav.context.copyWordmark": "Copy wordmark as SVG",
