@@ -1,9 +1,9 @@
 #!/bin/sh
 set -e
-export PATH="$HOME/.npm/bin:$PATH"
+BUN="$HOME/.npm/bin/bun"
 # Check if bun version matches package.json
 # keep in sync with packages/script/src/index.ts semver qualifier
-bun -e '
+"$BUN" -e '
 import { semver } from "bun";
 const pkg = await Bun.file("package.json").json();
 const expectedBunVersion = pkg.packageManager?.split("@")[1];
@@ -18,4 +18,4 @@ if (process.versions.bun !== expectedBunVersion) {
   console.warn(`Warning: Bun version ${process.versions.bun} differs from expected ${expectedBunVersion}`);
 }
 '
-bun typecheck
+"$BUN" typecheck
