@@ -78,20 +78,21 @@ export async function eskoPlugin(input: PluginInput): Promise<Hooks> {
     const confluenceUrl = process.env.CONFLUENCE_URL ?? "https://your-company.atlassian.net/wiki"
     const confluenceUser = process.env.CONFLUENCE_USERNAME ?? ""
     const confluenceToken = process.env.CONFLUENCE_API_TOKEN ?? ""
-    const eskoModel = process.env.OPENCODE_ESKO_MODEL ?? "anthropic/claude-sonnet-4-6"
+    const eskoModel = process.env.OPENCODE_ESKO_MODEL
     const webhookUrl = process.env.OPENCODE_ESKO_WEBHOOK_URL ?? null
 
     return {
       config: (cfg: Record<string, any>) => {
         cfg.agent ??= {}
-        cfg.agent["esko-reviewer"] = {
+        const agent: Record<string, any> = {
           description: "Esko Code Reviewer — reviews PRs against Jira tickets and Confluence specs.",
           mode: "subagent",
-          model: eskoModel,
           color: "accent",
           permission: { edit: "deny", bash: "ask" },
           prompt: fullPrompt,
         }
+        if (eskoModel) agent.model = eskoModel
+        cfg.agent["esko-reviewer"] = agent
 
         cfg.mcp ??= {}
         cfg.mcp["mcp-atlassian"] = {
